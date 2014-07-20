@@ -5,14 +5,34 @@ import(
 		"strings"
 		"os"
 		"io"
+		"io/ioutil"
 		"bufio"
 )
 
 func main() {
-	d := NewDocument()
-	d.File = "/Users/brettbeutell/gotomo/test/test.txt"
-	d.ReadFile()
-	fmt.Println(d)
+	var ds DocSet
+	ds.GetFiles()
+	fmt.Println(ds)
+}
+
+type DocSet struct {
+	Docs []Document
+}
+
+func (ds *DocSet) GetFiles() {
+	dir := "/Users/brettbeutell/boojay/gotomo/test/"
+	files, err := ioutil.ReadDir(dir)
+	if err != nil {
+		return
+	}
+	for _, file := range files {
+		if !file.IsDir() {
+			d := NewDocument()
+			d.File = dir + file.Name()
+			d.ReadFile()
+			ds.Docs = append(ds.Docs, *d)
+		}
+	}
 }
 
 type Document struct {
@@ -29,16 +49,15 @@ func NewDocument() *Document {
 }
 
 func (d Document) String() string {
-	const str = "<< Document: [%d Words, %d Unique] >>"
-	return fmt.Sprintf(str,d.WordCount,len(d.WordMap))
+	const str = "<< Document: \"%s\" [%d Words, %d Unique] >>"
+	return fmt.Sprintf(str,d.File, d.WordCount,len(d.WordMap))
 }
 
 // does it need an error?
 // it's reading '\n' as a word
 func (d *Document) ReadLine(s string) {
 	for _, word := range strings.Split(s, " ") {
-		d.WordMap[strings.ToLower(word)]++
-		fmt.Println(strings.ToLower(word))
+		d.WordMap[parse(word)]++
 		d.WordCount++
 	}
 }
@@ -62,4 +81,8 @@ func (d *Document) ReadFile() (err error) {
 		d.ReadLine(line)
 	}
 
+}
+
+func parse(s string) string {
+	return strings.ToLower(strings.Trim(s,"\n"))
 }
