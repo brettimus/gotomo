@@ -16,7 +16,8 @@ func main() {
 }
 
 type DocSet struct {
-	Docs []Document
+	Docs           []Document
+	GlobalWordMap  map[string]int
 }
 
 func (ds *DocSet) GetFiles() {
