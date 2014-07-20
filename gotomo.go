@@ -20,7 +20,7 @@ type DocSet struct {
 }
 
 func (ds *DocSet) GetFiles() {
-	dir := "/Users/brettbeutell/boojay/gotomo/test/"
+	dir := "test/"
 	files, err := ioutil.ReadDir(dir)
 	if err != nil {
 		return
