@@ -20,6 +20,11 @@ type DocSet struct {
 	GlobalWordMap  map[string]int
 }
 
+func (ds DocSet) String() string {
+	const str = "< DocSet: %d Documents >"
+	return fmt.Sprintf(str, len(ds.Docs))
+}
+
 func (ds *DocSet) GetFiles() {
 	dir := "test/"
 	files, err := ioutil.ReadDir(dir)
