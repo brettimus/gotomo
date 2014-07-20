@@ -10,23 +10,24 @@ import(
 )
 
 func main() {
-	var ds DocSet
+	var ds = DocSet{Path:"test/"}
 	ds.GetFiles()
 	fmt.Println(ds)
 }
 
 type DocSet struct {
+	Path           string // path to directory containing the 'Docs'. 
 	Docs           []Document
 	GlobalWordMap  map[string]int
 }
 
 func (ds DocSet) String() string {
-	const str = "< DocSet: %d Documents >"
-	return fmt.Sprintf(str, len(ds.Docs))
+	const str = "< DocSet: %d Documents in %s >"
+	return fmt.Sprintf(str, len(ds.Docs), ds.Path)
 }
 
 func (ds *DocSet) GetFiles() {
-	dir := "test/"
+	dir := ds.Path
 	files, err := ioutil.ReadDir(dir)
 	if err != nil {
 		return
