@@ -10,9 +10,17 @@ import(
 )
 
 func main() {
-	var ds = DocSet{Path:"test/"}
-	ds.GetFiles()
-	fmt.Println(ds)
+	var ds1 = DocSet{Path:"test/", GlobalWordMap: make(map[string]int)}
+	var ds2 = DocSet{Path:"test/", GlobalWordMap: make(map[string]int)}
+	var wd, _ = os.Getwd()
+  var stopWords = Document{File: wd + "/engStopWords.txt", WordMap: make(map[string]int)}
+	stopWords.ReadFile()
+	// Pass GetFiles() a Nil Document to remove no words. 
+	ds1.GetFiles(NewDocument())
+	// Pass a Document containing stop words to remove them from docs. 
+	ds2.GetFiles(&stopWords)
+	fmt.Println(ds1)
+	fmt.Println(ds2)
 }
 
 type DocSet struct {
@@ -22,11 +30,11 @@ type DocSet struct {
 }
 
 func (ds DocSet) String() string {
-	const str = "< DocSet: %d Documents in %s >"
-	return fmt.Sprintf(str, len(ds.Docs), ds.Path)
+	const str = "< DocSet: %d Documents in %s, Vocab has %d unique words. >"
+	return fmt.Sprintf(str, len(ds.Docs), ds.Path, len(ds.GlobalWordMap))
 }
 
-func (ds *DocSet) GetFiles() {
+func (ds *DocSet) GetFiles(sw *Document) {
 	dir := ds.Path
 	files, err := ioutil.ReadDir(dir)
 	if err != nil {
@@ -37,6 +45,10 @@ func (ds *DocSet) GetFiles() {
 			d := NewDocument()
 			d.File = dir + file.Name()
 			d.ReadFile()
+			d.rmStopWords(sw)
+			for word, count := range d.WordMap { // update global counts. 
+				ds.GlobalWordMap[word] += count
+			}
 			ds.Docs = append(ds.Docs, *d)
 		}
 	}
@@ -92,4 +104,11 @@ func (d *Document) ReadFile() (err error) {
 
 func parse(s string) string {
 	return strings.ToLower(strings.Trim(s,"\n"))
+}
+
+// Remove words that appear in a stopwords doc from d.  
+func (d *Document) rmStopWords(sw *Document) {
+	for key, _ := range sw.WordMap {
+		delete(d.WordMap, key)
+	}
 }
