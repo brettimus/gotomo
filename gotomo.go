@@ -34,6 +34,7 @@ func (ds DocSet) String() string {
 	return fmt.Sprintf(str, len(ds.Docs), ds.Path, len(ds.GlobalWordMap))
 }
 
+// This is the 'batch' method to populate a DocSet
 func (ds *DocSet) GetFiles(sw *Document) {
 	dir := ds.Path
 	files, err := ioutil.ReadDir(dir)
@@ -50,6 +51,16 @@ func (ds *DocSet) GetFiles(sw *Document) {
 				ds.GlobalWordMap[word] += count
 			}
 			ds.Docs = append(ds.Docs, *d)
+		}
+	}
+}
+
+// Update method for populating a DocSet
+func (ds *DocSet) Update(other *DocSet) {
+	for _, oDoc := range other.Docs {
+		ds.Docs = append(ds.Docs, *oDoc)
+		for word, count := range oDoc.WordMap {
+			ds.GlobalWordMap[word] += count;
 		}
 	}
 }
