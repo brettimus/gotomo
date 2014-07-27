@@ -14,3 +14,5 @@ lda in golang
 	* Similarly, for the eventual inference package, we will have functionality for 'batch' and 'online' inference.
   * Presumably, the 'online' or 'update' routine will take as input a pointer to a set of update documents.
   * It will then update the model parameters without iterating through the entire corpus to date. 
+
+4. Should DocSet.Docs be a []Document or a []*Document?
