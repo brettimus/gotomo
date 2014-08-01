@@ -41,7 +41,22 @@ func batchInfer(ds *DocSet, K int, alpha, beta float64) *LdaModel {
 }
 
 // online inference is a method on an Lda Model for updating. 
-func (ldam *LdaModel) onlineInfer(ds *DocSet) {
+func (ldam *LdaModel) onlineInfer(ds *DocSet, kappa, tau float64, batchSize int) {
+	// See 'Online Learning for Lda', page 4, for an explanation of kappa and tau parameters. 
+	// It looks like this method can be parallelized over per-document calculations.
+	// In the online algorithm, estimate of lambda is a weighted average over mini batches
+	// It looks like a (boring) decision will have to be made as to wheter or not the new DocSet provided 
+	// to this method should itself be considered a miniBatch, or if this method should split it further.
+	// Yeah, in fact, it would be pretty damn sweet if a different procedure split it up into minibatches (also DocSets)
+	// and called this function in parallel.  DO IT. 
+}
+
+func (ldam *LdaModel) estParams() ([][]float64, [][]float64) {
+	// returns Topic-Term Probabilities and Doc-Topic Mixture Proportions
+	// Will do so via the expectations listed on page 3 of 'Online Learning'
+
+	// Dummy return value for now. 
+	return (make([][]float64, 0), make([][]float64, 0))
 }
 
 type DocSet struct {
