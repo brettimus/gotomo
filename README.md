@@ -14,3 +14,7 @@ lda in golang
   * It will then update the model parameters without iterating through the entire corpus to date. 
 
 4. Should DocSet.Docs be a []Document or a []*Document?
+5. Global Word Count (GWC)
+  * The way JM implemented it, the GWC map is populated when files are read in.
+	* It is updated by merging with another docSet. 
+	* There maybe is a better way to do this... 
