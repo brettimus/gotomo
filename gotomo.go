@@ -21,6 +21,27 @@ func main() {
 	ds2.GetFiles(&stopWords)
 	fmt.Println(ds1)
 	fmt.Println(ds2)
+	ds2.Update(&ds1)
+	fmt.Println(ds2)
+}
+
+type LdaModel struct {
+	K int
+	alpha, beta float64
+	// Below are variational parameters. See 'Online learning for LDA', page 3.
+	varPhi [][][]float64 // named varPhi so as to distinguish from Phi, the topic-term multinom params. 
+	gamma [][]float64
+	lambda [][]float64
+}
+
+// batch inference takes an initial DocSet and parameters, returns ptr to LdaModel
+func batchInfer(ds *DocSet, K int, alpha, beta float64) *LdaModel {
+	// dummy return value for now. 
+	return new(LdaModel)
+}
+
+// online inference is a method on an Lda Model for updating. 
+func (ldam *LdaModel) onlineInfer(ds *DocSet) {
 }
 
 type DocSet struct {
@@ -58,7 +79,7 @@ func (ds *DocSet) GetFiles(sw *Document) {
 // Update method for populating a DocSet
 func (ds *DocSet) Update(other *DocSet) {
 	for _, oDoc := range other.Docs {
-		ds.Docs = append(ds.Docs, *oDoc)
+		ds.Docs = append(ds.Docs, oDoc)
 		for word, count := range oDoc.WordMap {
 			ds.GlobalWordMap[word] += count;
 		}
