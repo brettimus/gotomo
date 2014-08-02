@@ -23,47 +23,41 @@ func main() {
 	fmt.Println(ds2)
 	ds2.Update(&ds1)
 	fmt.Println(ds2)
+	lda1 := BatchInfer(&ds2, 10, 0.1, 0.1)
+	fmt.Println(lda1)
 }
 
 type LdaModel struct {
-	// model parameters
-	alpha, beta float64
+	Alpha, Beta float64
 	K int
-
-	// Below are variational parameters. See 'Online learning for LDA', page 3.
+	NumDocs int
 	varPhi [][][]float64 // named varPhi so as to distinguish from Phi, the topic-term multinom params. 
 	gamma [][]float64
 	lambda [][]float64
-
-	// Need to keep track of number of docs LDA has seen so far (for online).
-	numDocs int
 }
 
 // batch inference takes an initial DocSet and parameters, returns ptr to LdaModel
-func batchInfer(ds *DocSet, K int, alpha, beta float64) *LdaModel {
-	// dummy return value for now. 
-	return new(LdaModel)
+func BatchInfer(ds *DocSet, k int, alpha float64, beta float64) *LdaModel {
+	ldam :=  LdaModel{Alpha: alpha, Beta: beta, K: k,NumDocs: len(ds.Docs)}
+	// Gotta write the func tho. 
+	return &ldam
 }
 
 // online inference is a method on an Lda Model for updating. 
-func (ldam *LdaModel) onlineInfer(ds *DocSet, kappa, tau float64, batchSize int) {
-	// See 'Online Learning for Lda', page 4, for an explanation of kappa and tau parameters. 
-	// It looks like this method can be parallelized over per-document calculations.
-	// In the online algorithm, estimate of lambda is a weighted average over mini batches
-	// It looks like a (boring) decision will have to be made as to wheter or not the new DocSet provided 
-	// to this method should itself be considered a miniBatch, or if this method should split it further.
-	// Yeah, in fact, it would be pretty damn sweet if a different procedure split it up into minibatches (also DocSets)
-	// and called this function in parallel.  DO IT. 
-
-	// *be sure to update ldam.numDocs*
+func (ldam *LdaModel) OnlineInfer(ds *DocSet, kappa, tau float64, batchSize int) {
+  // write tha Func. 
 }
 
-func (ldam *LdaModel) estParams() ([][]float64, [][]float64) {
-	// returns Topic-Term Probabilities and Doc-Topic Mixture Proportions
-	// Will do so via the expectations listed on page 3 of 'Online Learning'
+func (ldam *LdaModel) EstParams() ([][]float64, [][]float64) {
+	// returns Topic-Term Probabilities (Phi) and Doc-Topic Mixture Proportions (Theta)
 
 	// Dummy return value for now. 
-	return (make([][]float64, 0), make([][]float64, 0))
+	return make([][]float64, 0), make([][]float64, 0)
+}
+
+func (ldam LdaModel) String() string {
+	const str ="< LdaModel: Model with %d topics, trained on %d documents. >"
+	return fmt.Sprintf(str, ldam.K, ldam.NumDocs)
 }
 
 type DocSet struct {
