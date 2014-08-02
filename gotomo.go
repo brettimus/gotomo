@@ -7,13 +7,14 @@ import(
 		"io"
 		"io/ioutil"
 		"bufio"
+		"math" // for digamma
 )
 
 func main() {
 	var ds1 = DocSet{Path:"test/", GlobalWordMap: make(map[string]int)}
 	var ds2 = DocSet{Path:"test/", GlobalWordMap: make(map[string]int)}
 	var wd, _ = os.Getwd()
-  var stopWords = Document{File: wd + "/engStopWords.txt", WordMap: make(map[string]int)}
+  	var stopWords = Document{File: wd + "/engStopWords.txt", WordMap: make(map[string]int)}
 	stopWords.ReadFile()
 	// Pass GetFiles() a Nil Document to remove no words. 
 	ds1.GetFiles(NewDocument())
@@ -166,3 +167,29 @@ func (d *Document) rmStopWords(sw *Document) {
 		delete(d.WordMap, key)
 	}
 }
+
+
+
+// digamma.go
+//
+// Ported from C code by Mark Johnson. 
+// Link here: http://web.science.mq.edu.au/~mjohnson/code/digamma.c
+//
+// checked for accuracy on wolfram alpha for digamma(.1), digamma(1.1), ..., digamma(9.1)
+
+
+func digamma(x float64) float64 {
+	var result, xx, xx2, xx4 float64
+	for x < 7.0 {
+		result -= 1/x 
+		x++
+	}
+	x -= 1.0/2.0
+	xx = 1.0/x
+	xx2 = xx*xx
+	xx4 = xx2*xx2
+	result += math.Log(x) +(1.0/24.0)*xx2-(7.0/960.0)*xx4+(31.0/8064.0)*xx4*xx2-(127.0/30720.0)*xx4*xx4
+	return result
+}
+
+
