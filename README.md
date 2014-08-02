@@ -18,3 +18,6 @@ lda in golang
   * The way JM implemented it, the GWC map is populated when files are read in.
 	* It is updated by merging with another docSet. 
 	* There maybe is a better way to do this... 
+
+### LITTLE THING(S) (-BB)
+1. math pkg: check Log1P vs. Log
