@@ -20,7 +20,7 @@ type DocSet struct {
 // path requires trailing slash-- parse it?
 func NewDocSet(path string) *DocSet {
 	sw := NewStopWordMap()
-	ds := DocSet{Path: path, StopWordMap: sw}
+	ds := DocSet{Path: path, StopWordMap: *sw, GlobalWordMap: make(map[string]int)}
 	if err := ds.setDocsCount(); err != nil {
 		panic(err)
 	}
@@ -29,6 +29,11 @@ func NewDocSet(path string) *DocSet {
 		panic(err) // this is panic-worthy, right? (BB)
 	}
 	// TODO merge all of the documents' word maps into the Global wordmap one (BB)
+	for _, doc := range ds.Docs {
+		for word, count := range doc.WordMap {
+			ds.GlobalWordMap[word] += count
+		}
+	}
 	return &ds
 }
 

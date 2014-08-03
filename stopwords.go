@@ -1,7 +1,7 @@
 package gotomo
 
-func NewStopWordMap() map[string]bool {
-	return map[string]bool{
+func NewStopWordMap() *map[string]bool {
+	var result = map[string]bool{
 		"a": true,
 		"a's": true,
 		"able": true,
@@ -571,5 +571,7 @@ func NewStopWordMap() map[string]bool {
 		"yourself": true,
 		"yourselves": true,
 		"z": true,
-		"zero": true}
+		"zero": true }
+
+	return &result
 }
