@@ -15,8 +15,11 @@ type LdaModel struct {
 	Lambda []map[string]float64
 }
 
-func sumSlice(sl []float64) (out float64) {
-	for _, val := range sl {
+// will this be called often? 
+// i.e., would it be more efficient to store a running total in memory?
+// - BB
+func sumSlice(s []float64) (out float64) {
+	for _, val := range s {
 		out += val
 	}
 	return out
