@@ -3,7 +3,7 @@ package gotomo
 import(
 	"fmt"
 	"math/rand"
-//	"math"
+	"math"
 )
 
 type LdaModel struct {
@@ -64,12 +64,11 @@ func NewLdaModel(ds DocSet, K int, alpha, beta float64) *LdaModel {
 
 // To be called on initialization.
 func (ldam *LdaModel) BatchInfer() {
-	// While not converged, 
-	//   E-Step then M-Step
+	// This is the last thing that needs to be written for batch. 
 }
 
 // online inference is a method on an Lda Model for updating. 
-func (ldam *LdaModel) OnlineInfer(ds *DocSet, kappa, tau float64, batchSize int) {}
+// func (ldam *LdaModel) OnlineInfer(ds *DocSet, kappa, tau float64, batchSize int) {}
 
 func (ldam *LdaModel) ThetaExpectation(d, k int) float64{
 	return digamma(ldam.Gamma[d][k]) - digamma(sumSlice(ldam.Gamma[d]))
@@ -83,17 +82,55 @@ func (ldam *LdaModel) PhiExpectation(k int, t string) (out float64) {
 }
 
 // E-Step helpers
-func (ldam *LdaModel) VarPhiUpdateBatch(d, k int, t string) {}
+func (ldam *LdaModel) VarPhiUpdateBatch(d, k int, t string) (new float64) {
+	new = math.Exp(ldam.ThetaExpectation(d, k) + ldam.PhiExpectation(k, t))
+	return new
+}
 
-func (ldam *LdaModel) GammaUpdateBatch(d, k int) {
-	//
+func (ldam *LdaModel) GammaUpdateBatch(d, k int) (new float64) {
+	var sum float64
+	for term, _ := range ldam.Dset.GlobalWordMap {
+		sum += float64(ldam.Dset.Docs[d].WordMap[term])*ldam.VarPhi[d][term][k]
+	}
+	new = ldam.Alpha + sum
+	return new
 }
 
 // M-Step helper
-func (ldam *LdaModel) LambdaUpdateBatch(k int, t string) {}
+func (ldam *LdaModel) LambdaUpdateBatch(k int, t string) (out float64) {
+	for index, doc := range ldam.Dset.Docs {
+		out += float64(doc.WordMap[t])*ldam.VarPhi[index][t][k]
+	}
+	return ldam.Beta + out
+}
 
-func (ldam *LdaModel) EStepBatch() {}
-func (ldam *LdaModel) MStepBatch() {}
+func (ldam *LdaModel) EStepBatch() (diff float64) {
+// Update VarPhi
+	for d,_ := range ldam.Dset.Docs {
+		for term, _ := range ldam.Dset.GlobalWordMap {
+			for k := 0; k < ldam.K; k++ {
+				ldam.VarPhi[d][term][k] = ldam.VarPhiUpdateBatch(d, k, term)				
+			}
+		}
+	}
+
+	// Update Gamma
+	for d,_ := range ldam.Dset.Docs {
+		for k:=0; k < ldam.K; k++ {
+			old, new := ldam.Gamma[d][k], ldam.GammaUpdateBatch(d, k)
+			diff += math.Abs(new - old)
+		}
+	}
+
+	return diff/float64(ldam.K)
+}
+func (ldam *LdaModel) MStepBatch() {
+	for k := 0; k < ldam.K; k++ {
+		for term, _ := range ldam.Dset.GlobalWordMap {
+			ldam.Lambda[k][term] = ldam.LambdaUpdateBatch(k, term)
+		}
+	}
+}
 
 func (ldam *LdaModel) EstParams() ([]map[string]float64, [][]float64) {
 	// returns Topic-Term Probabilities (Phi) and Doc-Topic Mixture Proportions (Theta)
