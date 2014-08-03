@@ -8,6 +8,7 @@ import(
 		"io/ioutil"
 		"bufio"
 		"math" // for digamma
+	  "math/rand"
 )
 
 func main() {
@@ -24,41 +25,102 @@ func main() {
 	fmt.Println(ds2)
 	ds2.Update(&ds1)
 	fmt.Println(ds2)
-	lda1 := BatchInfer(&ds2, 10, 0.1, 0.1)
+	lda1 := NewLdaModel(ds2, 10, 0.1, 0.1)
 	fmt.Println(lda1)
+	lda := *lda1
+	fmt.Println(lda.Lambda)
 }
 
 type LdaModel struct {
+	Dset DocSet
 	Alpha, Beta float64
 	K int
-	NumDocs int
-	varPhi [][][]float64 // named varPhi so as to distinguish from Phi, the topic-term multinom params. 
-	gamma [][]float64
-	lambda [][]float64
+	VarPhi [][][]float64 // named varPhi so as to distinguish from Phi, the topic-term multinom params. 
+	Gamma [][]float64
+	Lambda [][]float64
+}
+
+func sumSlice(sl []float64) float64 {
+	out := 0
+	for _, val := range sl {
+		out += val
+	}
+	return out
+}
+
+func unifRandomSlice(size int) []float64 {
+	out := make([]float64, size)
+	for i, _ := range out {
+		out[i] = rand.Float64()
+	}
+	return out
+}
+
+func allOnesSlice(size int) []float64 {
+	out := make([]float64, size)
+	for i, _ := range out {
+		out[i] = 1
+	} 
+	return out
 }
 
 // batch inference takes an initial DocSet and parameters, returns ptr to LdaModel
-func BatchInfer(ds *DocSet, k int, alpha float64, beta float64) *LdaModel {
-	ldam :=  LdaModel{Alpha: alpha, Beta: beta, K: k,NumDocs: len(ds.Docs)}
-	// Gotta write the func tho. 
+func NewLdaModel(ds DocSet, k int, alpha float64, beta float64) *LdaModel {
+	m := len(ds.Docs)
+	v := len(ds.GlobalWordMap)
+	
+	// initialize Lambda Randomly
+	initLambda := make([][]float64, k)
+	for i, _ := range initLambda {
+		initLambda[i] = unifRandomSlice(v)
+	}
+
+	// initialize gamma with all ones. 
+	initGamma := make([][]float64, m)
+	for i, _ := range initGamma {
+		initGamma[i] = allOnesSlice(k)
+	}
+
+	// initialize VarPhi with all zeroes. 
+	initVarPhi := make([][][]float64, m)
+	for i, _ := range initVarPhi {
+		initVarPhi[i] = make([][]float64, v)
+		for j, _ := range initVarPhi[i] {
+			initVarPhi[i][j] = make([]float64, k)
+		}
+	}
+
+	ldam :=  LdaModel{Dset: ds, Alpha: alpha, Beta: beta, K: k, Lambda: initLambda, Gamma: initGamma, VarPhi: initVarPhi}
 	return &ldam
 }
 
-// online inference is a method on an Lda Model for updating. 
-func (ldam *LdaModel) OnlineInfer(ds *DocSet, kappa, tau float64, batchSize int) {
-  // write tha Func. 
+// To be called on initialization.
+func (ldam *LdaModel) BatchInfer() {
 }
+
+// online inference is a method on an Lda Model for updating. 
+func (ldam *LdaModel) OnlineInfer(ds *DocSet, kappa, tau float64, batchSize int) {}
+
+func (ldam *LdaModel) thetaExpectation(d, k int) float64{
+	return digamma(ldam.Gamma[d][k]) - digamma(sumSlice(ldam.Gamma[d]))
+}
+
+func (ldam *LdaModel) phiExpectation(k, t int) float64{
+	return digamma(ldam.Lambda[k][t]) - digamma(sumSlice(ldam.Lambda[k]))
+}
+
+func (ldam *LdaModel) varPhiUpdate(d, t, k int) {}
 
 func (ldam *LdaModel) EstParams() ([][]float64, [][]float64) {
 	// returns Topic-Term Probabilities (Phi) and Doc-Topic Mixture Proportions (Theta)
-
-	// Dummy return value for now. 
-	return make([][]float64, 0), make([][]float64, 0)
+	m, v := len(ldam.Dset.Docs), len(ldam.Dset.GlobalWordMap)
+	k := ldam.K
+	Phi, Theta := make([][]float64, k), make([][]float64, m)
 }
 
 func (ldam LdaModel) String() string {
-	const str ="< LdaModel: Model with %d topics, trained on %d documents. >"
-	return fmt.Sprintf(str, ldam.K, ldam.NumDocs)
+	const str ="< LdaModel: Model with %d topics, and %d documents. >"
+	return fmt.Sprintf(str, ldam.K, len(ldam.Dset.Docs))
 }
 
 type DocSet struct {
