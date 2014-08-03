@@ -37,9 +37,9 @@ func NewDocSet(path string) *DocSet {
 	return &ds
 }
 
-// I don't like the redundancy between the next two functions.
+// I don't like the redundancy of the next two functions.
 // should use closures. halp!! (BB)
-// *** SERIOUSLY USE SOME CLOUSRE *** //
+// *** SRSLY, USE SOME CLOUSRE *** //
 func (ds *DocSet) setDocsCount() (err error) {
 	var files []os.FileInfo 
 	if files, err = ioutil.ReadDir(ds.Path); err != nil {
@@ -63,15 +63,13 @@ func (ds *DocSet) GetFiles() (err error) {
 	for _, file := range files {
 		if !file.IsDir() { // is this necessary? 
 			d := NewDocument(ds)
+			// too soon??? needs test (BB)
+			ds.Docs = append(ds.Docs, *d)
 			d.File = ds.Path + file.Name()
 			// TODO pass this to go routine as anon func (BB)
 			d.ReadFile()
 
-			// for word, count := range d.WordMap { // update global counts. 
-			// 	ds.GlobalWordMap[word] += count
-			// }
-			ds.Docs = append(ds.Docs, *d)
-		} // handle else of having folders of files?
+		} // handle else of having moar folders of files?
 	}
 	return err
 }
