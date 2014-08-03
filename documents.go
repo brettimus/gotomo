@@ -25,8 +25,17 @@ func NewDocSet(path string) *DocSet {
 		panic(err)
 	}
 	// pass a channel to GetFiles if we want to read them concurrently (BB)
-	if err := ds.GetFiles(); err != nil {
+	blah := make(chan bool)
+	if err := ds.GetFiles(blah); err != nil {
 		panic(err) // this is panic-worthy, right? (BB)
+	}
+	// handle channel
+	var numDone int
+	for numDone < ds.DocsCount {
+		select {
+		case <-blah:
+			numDone ++
+		}
 	}
 	// TODO merge all of the documents' word maps into the Global wordmap one (BB)
 	for _, doc := range ds.Docs {
@@ -55,7 +64,7 @@ func (ds *DocSet) setDocsCount() (err error) {
 
 // This is the 'batch' method to populate a DocSet
 //
-func (ds *DocSet) GetFiles() (err error) {
+func (ds *DocSet) GetFiles(blah chan bool) (err error) {
 	files, err := ioutil.ReadDir(ds.Path)
 	if err != nil {
 		return err
@@ -67,7 +76,13 @@ func (ds *DocSet) GetFiles() (err error) {
 			ds.Docs = append(ds.Docs, *d)
 			d.File = ds.Path + file.Name()
 			// TODO pass this to go routine as anon func (BB)
-			d.ReadFile()
+			go func() {
+				err := d.ReadFile()
+				if err == nil {
+					fmt.Println("Fix this error message because it's not real but something went wrong in reading the file for:", d)
+				}
+				blah<-true
+			}()
 
 		} // handle else of having moar folders of files?
 	}
