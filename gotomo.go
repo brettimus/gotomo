@@ -65,7 +65,7 @@ func allOnesSlice(size int) []float64 {
 }
 
 // batch inference takes an initial DocSet and parameters, returns ptr to LdaModel
-func NewLdaModel(ds DocSet, k int, alpha float64, beta float64) *LdaModel {
+func NewLdaModel(ds DocSet, k int, alpha, beta float64) *LdaModel {
 	m := len(ds.Docs)
 	v := len(ds.GlobalWordMap)
 	
@@ -217,7 +217,9 @@ func parse(s string) string {
 	return strings.ToLower(strings.Trim(s,"\n"))
 }
 
-// Remove words that appear in a stopwords doc from d.  
+// Remove words that appear in a stopwords doc from d.
+//  
+// *** this can be incorporated into the parse *** // -BB
 func (d *Document) rmStopWords(sw *Document) {
 	for key, _ := range sw.WordMap {
 		delete(d.WordMap, key)
