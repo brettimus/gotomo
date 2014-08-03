@@ -2,16 +2,17 @@ package gotomo
 
 import(
 	"fmt"
-    "math/rand"
+	"math/rand"
+//	"math"
 )
 
 type LdaModel struct {
 	Dset DocSet
 	Alpha, Beta float64
 	K int
-	VarPhi [][][]float64 // named varPhi so as to distinguish from Phi, the topic-term multinom params. 
+	VarPhi []map[string][]float64
 	Gamma [][]float64
-	Lambda [][]float64
+	Lambda []map[string]float64
 }
 
 func sumSlice(sl []float64) (out float64) {
@@ -21,13 +22,6 @@ func sumSlice(sl []float64) (out float64) {
 	return out
 }
 
-func unifRandomSlice(size int) []float64 {
-	out := make([]float64, size)
-	for i, _ := range out {
-		out[i] = rand.Float64()
-	}
-	return out
-}
 
 func allOnesSlice(size int) []float64 {
 	out := make([]float64, size)
@@ -39,12 +33,14 @@ func allOnesSlice(size int) []float64 {
 
 func NewLdaModel(ds DocSet, K int, alpha, beta float64) *LdaModel {
 	m := len(ds.Docs)
-	v := len(ds.GlobalWordMap)
 	
 	// initialize Lambda Randomly
-	initLambda := make([][]float64, K)
+	initLambda := make([]map[string]float64, K)
 	for i, _ := range initLambda {
-		initLambda[i] = unifRandomSlice(v)
+		initLambda[i] = make(map[string]float64)
+		for term, _ := range ds.GlobalWordMap {
+			initLambda[i][term] = rand.Float64()
+		}
 	}
 
 	// initialize gamma with all ones. 
@@ -54,11 +50,11 @@ func NewLdaModel(ds DocSet, K int, alpha, beta float64) *LdaModel {
 	}
 
 	// initialize VarPhi with all zeroes. 
-	initVarPhi := make([][][]float64, m)
+	initVarPhi := make([]map[string][]float64, m)
 	for i, _ := range initVarPhi {
-		initVarPhi[i] = make([][]float64, v)
-		for j, _ := range initVarPhi[i] {
-			initVarPhi[i][j] = make([]float64, K)
+		initVarPhi[i] = make(map[string][]float64)
+		for term, _ := range ds.GlobalWordMap {
+			initVarPhi[i][term] = make([]float64, K)
 		}
 	}
 
@@ -79,29 +75,35 @@ func (ldam *LdaModel) ThetaExpectation(d, k int) float64{
 	return digamma(ldam.Gamma[d][k]) - digamma(sumSlice(ldam.Gamma[d]))
 }
 
-func (ldam *LdaModel) PhiExpectation(k, t int) float64{
-	return digamma(ldam.Lambda[k][t]) - digamma(sumSlice(ldam.Lambda[k]))
+func (ldam *LdaModel) PhiExpectation(k int, t string) (out float64) {
+	for term, _ := range ldam.Dset.GlobalWordMap {
+		out += ldam.Lambda[k][term]
+	}
+	return digamma(ldam.Lambda[k][t]) - out
 }
 
 // E-Step helpers
-func (ldam *LdaModel) VarPhiUpdateBatch(d, t, k int) {}
-func (ldam *LdaModel) GammaUpdateBatch(d, k int) {}
+func (ldam *LdaModel) VarPhiUpdateBatch(d, k int, t string) {}
+
+func (ldam *LdaModel) GammaUpdateBatch(d, k int) {
+	//
+}
 
 // M-Step helper
-func (ldam *LdaModel) LambdaUpdateBatch(k, t int) {}
+func (ldam *LdaModel) LambdaUpdateBatch(k int, t string) {}
 
 func (ldam *LdaModel) EStepBatch() {}
 func (ldam *LdaModel) MStepBatch() {}
 
-func (ldam *LdaModel) EstParams() ([][]float64, [][]float64) {
+func (ldam *LdaModel) EstParams() ([]map[string]float64, [][]float64) {
 	// returns Topic-Term Probabilities (Phi) and Doc-Topic Mixture Proportions (Theta)
-	M, V := len(ldam.Dset.Docs), len(ldam.Dset.GlobalWordMap)
+	M := len(ldam.Dset.Docs)
 	numTopics := ldam.K
-	Phi, Theta := make([][]float64, numTopics), make([][]float64, M) // kept vars here for clarity's sake, but it'd be more efficient just to return without declaring (BB)
+	Phi, Theta := make([]map[string]float64, numTopics), make([][]float64, M) // kept vars here for clarity's sake, but it'd be more efficient just to return without declaring (BB)
 
 	// Phi contains slices of length v
 	for i, _ := range Phi {
-		Phi[i] = make([]float64, V)
+		Phi[i] = make(map[string]float64)
 	}
 
 	// Theta contains slices of length 'numTopics'
@@ -111,8 +113,8 @@ func (ldam *LdaModel) EstParams() ([][]float64, [][]float64) {
 
 	// Assign each entry of Phi to its expecation.
 	for k :=0; k < numTopics; k++ {
-		for t := 0; t < V; t++ {
-			Phi[k][t] = ldam.PhiExpectation(k, t)
+		for term, _ := range ldam.Dset.GlobalWordMap {
+			Phi[k][term] = ldam.PhiExpectation(k, term)
 		}
 	}
 
