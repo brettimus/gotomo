@@ -3,7 +3,7 @@ gotomo
 lda in golang
 
 ## TODO
-1. Implement DiGamma Function.
+~~1. Implement DiGamma Function.~~
 2. Implement Batch and Online Variational Inference
 3. (lower priority) Have parse function remove punctuation. 
 
@@ -19,5 +19,3 @@ lda in golang
 	* It is updated by merging with another docSet. 
 	* There maybe is a better way to do this... 
 
-### LITTLE THING(S) (-BB)
-1. math pkg: check Log1P vs. Log
