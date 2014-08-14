@@ -10,9 +10,10 @@ lda in golang
 4. Implement Online Variational Bayes
 
 
-### LITTLE THING(S)
-1. math pkg: check Log1P vs. Log (-BB)
-2. have parse function remove punctuation (-JM)
+### LITTLE THING(S) 
+1. have parse function remove punctuation (-JM)
+
+Other stuff?
 =======
 1. ~~Implement DiGamma Function.~~   
 2. Implement Batch and Online Variational Inference
