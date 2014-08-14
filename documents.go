@@ -78,7 +78,7 @@ func (ds *DocSet) GetFiles(blah chan bool) (err error) {
 			// TODO pass this to go routine as anon func (BB)
 			go func() {
 				err := d.ReadFile()
-				if err == nil {
+				if err != nil {
 					fmt.Println("Fix this error message because it's not real but something went wrong in reading the file for:", d)
 				}
 				blah<-true
