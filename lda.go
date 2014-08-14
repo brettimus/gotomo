@@ -18,6 +18,7 @@ type LdaModel struct {
 // will this be called often? 
 // i.e., would it be more efficient to store a running total in memory?
 // - BB
+// Methinks you're right. - JM
 func sumSlice(s []float64) (out float64) {
 	for _, val := range s {
 		out += val
@@ -127,6 +128,7 @@ func (ldam *LdaModel) EStepBatch() (diff float64) {
 
 	return diff/float64(ldam.K)
 }
+
 func (ldam *LdaModel) MStepBatch() {
 	for k := 0; k < ldam.K; k++ {
 		for term, _ := range ldam.Dset.GlobalWordMap {
