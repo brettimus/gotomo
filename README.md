@@ -3,17 +3,13 @@ gotomo
 lda in golang
 
 ## TODO
-<<<<<<< HEAD
 1. Implement Batch Variational Bayes
 2. Refactor Inference helper funcs. 
 3. Test on a corpus (like patents?)
 4. Implement Online Variational Bayes
 
 
-### LITTLE THING(S) 
-1. have parse function remove punctuation (-JM)
-
-Other stuff?
+Other stuff
 =======
 1. ~~Implement DiGamma Function.~~   
 2. Implement Batch and Online Variational Inference
@@ -31,4 +27,3 @@ Other stuff?
 	* It is updated by merging with another docSet. 
 	* There maybe is a better way to do this... 
 
->>>>>>> upstream/master
