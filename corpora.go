@@ -1,6 +1,7 @@
 package main
 
 import "fmt"
+import "strings"
 
 func main() {
 	result_string := "%d tests passed\n%d tests failed\n%d total tests.\n"
@@ -10,7 +11,7 @@ func main() {
 
 type Doc []string
 
-// fulfills iterator interface
+// should fulfill iterator interface
 type DocSet []Doc
 
 type Id2Word map[int]string
@@ -30,15 +31,35 @@ type Corpus struct {
 
 // functions
 // let's wait before we make them methods?
+
+func ParseLine(line string) []string {
+	// would it be more efficient to get rid of \n in the byte streams?
+	var result []string
+	for _, word := range strings.Split(strings.ToLower(line), " ") {
+		word = strings.Trim(word, "\n")
+		if !IsStopWord(word) {
+			result = append(result, word)
+		}
+	}
+	return result
+}
+func test_ParseLine() bool {
+	test_result := ParseLine("HI my name is a fern")
+	assertion := []string{"fern"}
+	// needs cleanup
+	var result bool
+	if len(test_result) == len(assertion) {
+		result = true
+	}
+	return result
+}
 func IsStopWord(word string) bool {
 	stopWords := *NewStopWordMap() // is this initialized with every function call?
 	return stopWords[word]
 }
 func test_IsStopWord() bool {
 	result := IsStopWord("able")
-	if result {
-		fmt.Println("IsStopWord() Passed")
-	} else {
+	if !result {
 		fmt.Println("IsStopWord() Failed")
 	}
 	return result
@@ -52,6 +73,11 @@ func run_tests() (int, int) {
 	} else {
 		failed++
 	}
+	if test_ParseLine() {
+		passed++
+		} else {
+			failed++
+		}
 	return passed, failed
 }
 
