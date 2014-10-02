@@ -1,6 +1,9 @@
 package main
 
 import "fmt"
+import "os"
+import "io"
+import "bufio"
 import "strings"
 
 func main() {
@@ -31,6 +34,47 @@ type Corpus struct {
 
 // functions
 // let's wait before we make them methods?
+
+
+// There should be a DocReader interface,
+// So, in this case, ReadLocalFile will be assigned to the ReadFile method of a LocalDocument struct... in my mind
+// and the LocalDoc struct will thus fulfill the DocReader interface?
+func ReadLocalFile(filepath string, bow *map[string]int) (err error) {
+	iFile := os.Stdin
+	if iFile, err = os.Open(filepath); err != nil {
+		return err
+	}
+	defer iFile.Close()
+	reader := bufio.NewReader(iFile)
+	for {
+		line, err := reader.ReadString('\n')
+		words := ParseLine(line)
+		for _, word := range words {
+			(*bow)[word] += 1			
+		}
+
+		if err == io.EOF {
+			err = nil
+			return err
+		}
+		if err != nil {
+			return err
+		}
+
+	}
+}
+
+func test_ReadLocalFile() bool {
+	filepath := "test_files/test01.txt"
+	test_map := make(map[string]int)
+	ReadLocalFile(filepath, &test_map)
+	var result bool
+	result = test_map["brown"] == 1
+	result = result && (test_map["rumples"] == 1)
+	result = result && (test_map["slim"] == 1)
+	result = result && (test_map["shady"] == 1)
+	return result
+}
 
 func ParseLine(line string) []string {
 	// would it be more efficient to get rid of \n in the byte streams?
@@ -75,9 +119,14 @@ func run_tests() (int, int) {
 	}
 	if test_ParseLine() {
 		passed++
-		} else {
-			failed++
-		}
+	} else {
+		failed++
+	}
+	if test_ReadLocalFile() {
+		passed++
+	} else {
+		failed++
+	}
 	return passed, failed
 }
 
